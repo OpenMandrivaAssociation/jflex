@@ -4,7 +4,7 @@
 
 Name:           jflex
 Version:        1.4.1
-Release:        %mkrel 11
+Release:        %mkrel 12
 Epoch:          0
 Summary:        A Lexical Analyzer Generator for Java
 License:        GPL
