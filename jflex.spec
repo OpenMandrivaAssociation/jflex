@@ -33,7 +33,7 @@
 Summary:        Fast Scanner Generator
 Name:           jflex
 Version:        1.4.3
-Release:        1
+Release:        3
 Epoch:          0
 License:        GPLv2
 URL:            http://jflex.de/
