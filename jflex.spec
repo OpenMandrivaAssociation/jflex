@@ -1,145 +1,210 @@
-# Copyright (c) 2000-2005, JPackage Project
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions
-# are met:
-#
-# 1. Redistributions of source code must retain the above copyright
-#    notice, this list of conditions and the following disclaimer.
-# 2. Redistributions in binary form must reproduce the above copyright
-#    notice, this list of conditions and the following disclaimer in the
-#    documentation and/or other materials provided with the
-#    distribution.
-# 3. Neither the name of the JPackage Project nor the names of its
-#    contributors may be used to endorse or promote products derived
-#    from this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
+%bcond_with                bootstrap
+%define section            free
+%define gcj_support        1
 
-%define section free
-
-Summary:        Fast Scanner Generator
 Name:           jflex
-Version:        1.4.3
-Release:        3
+Version:        1.4.1
+Release:        19
 Epoch:          0
-License:        GPLv2
-URL:            http://jflex.de/
+Summary:        A Lexical Analyzer Generator for Java
+License:        GPL
 Group:          Development/Java
-Source0:        http://jflex.de/%{name}-%{version}.tar.gz
-Source1:        http://repo2.maven.org/maven2/de/jflex/jflex/1.4.3/jflex-1.4.3.pom
-Patch0:         jflex-build_xml.patch
-BuildRequires:  jpackage-utils >= 0:1.5
-BuildRequires:  ant
-BuildRequires:  junit
-BuildRequires:  java-devel
-BuildRequires:  java_cup
-Requires:       java
+Source0:        http://www.jflex.de/jflex-1.4.1.tar.bz2
+Source1:        jflex.script
+Source2:        jflex-1.4.1-generated-files.tar.bz2
+Patch0:         jflex-javac-no-target.patch
+Patch1:         jflex-no-cup-no-jflex.patch
+Patch2:         jflex-classpath.patch
+Patch3:         jflex-cup-anttask.patch
+Patch4:         jflex-byaccj-utl.patch
+URL:            http://www.jflex.de/
 Requires:       java_cup
+Requires:       jpackage-utils
+BuildRequires:  ant
+BuildRequires:  java_cup
+BuildRequires:  locales-en
+%if %without bootstrap
+BuildRequires:  jflex
+%endif
+BuildRequires:  java-rpmbuild
+BuildRequires:  junit
+%if %{gcj_support}
+BuildRequires:  java-gcj-compat-devel
+%else
 BuildArch:      noarch
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
+%endif
 
 %description
-JFlex is a lexical analyzer generator (also known as scanner 
-generator) for Java(tm), written in Java(tm). It is also a 
-rewrite of the very useful tool JLex which was developed by 
-Elliot Berk at Princeton University. As Vern Paxson states 
-for his C/C++ tool flex: They do not share any code though.
-JFlex is designed to work together with the LALR parser 
-generator CUP by Scott Hudson, and the Java modification of 
-Berkeley Yacc BYacc/J by Bob Jamison. It can also be used 
-together with other parser generators like ANTLR or as a 
-standalone tool. 
+JFlex is a lexical analyzer generator for Java written in Java. It is 
+also a rewrite of the very useful tool JLex which was developed by 
+Elliot Berk at Princeton University. As Vern Paxson states for his C/C++ 
+tool flex: they do not share any code though.
+
+Design goals The main design goals of JFlex are:
+
+    * Full unicode support
+    * Fast generated scanners
+    * Fast scanner generation
+    * Convenient specification syntax
+    * Platfo%{__rm} independence
+    * JLex compatibility
 
 %package javadoc
-Summary:        Javadoc for %{name}
 Group:          Development/Java
+Summary:        Javadoc for %{name}
 
 %description javadoc
-%{summary}.
+Javadoc for %{name}.
 
 %prep
 %setup -q
-%patch0 -p0 -b .sav
-for j in $(find . -name "*.jar"); do mv $j $j.no; done
-find . -name "*.class" -exec rm {} \;
-
-%{__sed} -i 's/\r//' COPYRIGHT
-%{__sed} -i 's|includes="JFlex/\*\*,java_cup/\*\*,skeleton|includes="JFlex/\*\*,skeleton|g' src/build.xml 
+%{__rm} -rf src/java_cup
+find . -name '*.jar' | xargs -t %{__rm}
+%patch0 -p1
+%if %with bootstrap
+%setup -q -T -D -a 2
+%patch1 -p1
+%else
+%patch2 -p1
+%patch3 -p1
+%patch4 -p1
+%endif
 
 %build
-
+export LC_ALL=ISO-8859-1
 pushd src
-
-ln -sf $(build-classpath junit)
-# intial build using the autogenerated sym.java LexParse.java and LexScan.java
-# these are created by the jflex ant task which needs to be built first
-ant -v jar-bootstrap
-# now that the JFlex.jar has been build we can use jflex ant tasks
-# removing the generated files and rebuilding using the JFlex.jar
-CLASSPATH=%{_javadir}/junit.jar:%{_javadir}/java_cup.jar:../lib/JFlex.jar ant genclean libclean jar
-
-javadoc -sourcepath . -d ../api JFlex
+%if %without bootstrap
+export CLASSPATH=$(build-classpath java-cup junit jflex)
+%else
+export CLASSPATH=$(build-classpath java-cup junit)
+%endif
+export OPT_JAR_LIST=
+%if %without bootstrap
+%ant realclean
+%endif
+%ant jar
+%{__mkdir_p} ../dist/docs/api
+%{javadoc} -d ../dist/docs/api `find . -type f -name "*.java"`
 popd
 
 %install
-rm -rf $RPM_BUILD_ROOT
-
-# jars
-mkdir -p $RPM_BUILD_ROOT%{_javadir}
-cp -p lib/JFlex.jar \
-  $RPM_BUILD_ROOT%{_javadir}/%{name}-%{version}.jar
-(cd $RPM_BUILD_ROOT%{_javadir} && for jar in *-%{version}.jar; \
-   do ln -sf ${jar} `echo $jar| sed "s|-%{version}||g"`; done)
-(cd $RPM_BUILD_ROOT%{_javadir} && ln -sf jflex.jar JFlex.jar)
-   
-%add_to_maven_depmap de.jflex jflex %{version} JPP jflex
-
-# poms
-install -d -m 755 %{buildroot}%{_datadir}/maven2/poms
-install -pm 644 %{SOURCE1} \
-    %{buildroot}%{_datadir}/maven2/poms/JPP-%{name}.pom
-
+# jar
+%{__mkdir_p} %{buildroot}%{_javadir}
+%{__install} -m 644 lib/JFlex.jar %{buildroot}%{_javadir}/%{name}-%{version}.jar
+(cd %{buildroot}%{_javadir} && for jar in *-%{version}*; do %{__ln_s} ${jar} `echo $jar| sed  "s|-%{version}||g"`; done)
+# compatibility symlink
+(cd %{buildroot}%{_javadir} && %{__ln_s} jflex.jar JFlex.jar)
 # javadoc
-mkdir -p $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-cp -pr api/* $RPM_BUILD_ROOT%{_javadocdir}/%{name}-%{version}
-ln -s %{name}-%{version} $RPM_BUILD_ROOT%{_javadocdir}/%{name} 
+%{__mkdir_p} 755 %{buildroot}%{_javadocdir}/%{name}-%{version}
+cp -a dist/docs/api/* %{buildroot}%{_javadocdir}/%{name}-%{version}
+(cd %{buildroot}%{_javadocdir} && %{__ln_s} %{name}-%{version} %{name})
 
-# docs
-mkdir -p $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
-cp -p doc/* $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
-cp -p COPYRIGHT $RPM_BUILD_ROOT%{_docdir}/%{name}-%{version}
+%{__mkdir_p} %{buildroot}%{_bindir}
+%{__install} -m 755 %{SOURCE1} %{buildroot}%{_bindir}/jflex
 
-%clean
-rm -rf $RPM_BUILD_ROOT
+%{__perl} -pi -e 's/\r$//g' examples/standalone/sample.inp
 
+%if %{gcj_support}
+%{_bindir}/aot-compile-rpm
+%endif
+
+%if %{gcj_support}
 %post
-%update_maven_depmap
+%{update_gcjdb}
 
 %postun
-%update_maven_depmap
+%{clean_gcjdb}
+%endif
+
+%post javadoc
+%{__rm} -f %{_javadocdir}/%{name}
+%{__ln_s} %{name}-%{version} %{_javadocdir}/%{name}
+
+%postun javadoc
+if [ "$1" = "0" ]; then
+    %{__rm} -f %{_javadocdir}/%{name}
+fi
 
 %files
 %defattr(0644,root,root,0755)
-%doc %{_docdir}/%{name}-%{version}
-%{_javadir}/*.jar
-%{_datadir}/maven2/poms/*
-%{_mavendepmapfragdir}/*
+%doc COPYRIGHT doc examples src/README src/changelog
+%attr(0755,root,root) %{_bindir}/jflex
+%{_javadir}/%{name}.jar
+%{_javadir}/%{name}-%{version}.jar
+%{_javadir}/JFlex.jar
+%if %{gcj_support}
+%dir %{_libdir}/gcj/%{name}
+%attr(-,root,root) %{_libdir}/gcj/%{name}/*
+%endif
 
 %files javadoc
 %defattr(0644,root,root,0755)
-%doc %{_javadocdir}/%{name}-%{version}
-%doc %{_javadocdir}/%{name}
+%{_javadocdir}/%{name}-%{version}
+%ghost %{_javadocdir}/%{name}
+
+
+
+%changelog
+* Wed May 04 2011 Oden Eriksson <oeriksson@mandriva.com> 0:1.4.1-16mdv2011.0
++ Revision: 665825
+- mass rebuild
+
+* Fri Dec 03 2010 Oden Eriksson <oeriksson@mandriva.com> 0:1.4.1-15mdv2011.0
++ Revision: 606081
+- rebuild
+
+* Wed Mar 17 2010 Oden Eriksson <oeriksson@mandriva.com> 0:1.4.1-14mdv2010.1
++ Revision: 523084
+- rebuilt for 2010.1
+
+* Wed Sep 02 2009 Christophe Fergeau <cfergeau@mandriva.com> 0:1.4.1-13mdv2010.0
++ Revision: 425460
+- rebuild
+
+* Tue Jun 17 2008 Thierry Vignaud <tv@mandriva.org> 0:1.4.1-12mdv2009.0
++ Revision: 221710
+- rebuild
+- kill re-definition of %%buildroot on Pixel's request
+
+  + Olivier Blin <oblin@mandriva.com>
+    - restore BuildRoot
+
+* Sun Dec 16 2007 Anssi Hannula <anssi@mandriva.org> 0:1.4.1-11mdv2008.1
++ Revision: 120941
+- buildrequire java-rpmbuild, i.e. build with icedtea on x86(_64)
+
+* Sat Sep 15 2007 Anssi Hannula <anssi@mandriva.org> 0:1.4.1-10mdv2008.0
++ Revision: 87433
+- rebuild to filter out autorequires of GCJ AOT objects
+- remove unnecessary Requires(post) on java-gcj-compat
+
+* Sat Sep 08 2007 Pascal Terjan <pterjan@mandriva.org> 0:1.4.1-9mdv2008.0
++ Revision: 82536
+- update to new version
+
+
+* Wed Nov 08 2006 David Walluck <walluck@mandriva.org>
++ 2006-11-08 04:53:36 (78038)
+- BuildRequires: jflex for non-bootstrap
+- disable bootstrap
+
+* Tue Nov 07 2006 David Walluck <walluck@mandriva.org> 1.4.1-6mdv2007.1
++ 2006-11-07 12:12:56 (77050)
+- fix some (Build)Requires
+- enable bootstrap
+- Import jflex
+
+* Sun Sep 10 2006 David Walluck <walluck@mandriva.org> 0:1.4.1-4mdv2007.0
+- fix build by removing included java_cup sources
+
+* Sun Sep 10 2006 David Walluck <walluck@mandriva.org> 0:1.4.1-3mdv2007.0
+- don't clean generated files before build (fails)
+- add byaccj url fix from Debian
+- remove jflex dir from $RPM_BUILD_DIR
+
+* Sun Sep 10 2006 David Walluck <walluck@mandriva.org> 0:1.4.1-2mdv2007.0
+- clean build environment
+
+* Sat Sep 09 2006 David Walluck <walluck@mandriva.org> 0:1.4.1-1mdv2007.0
+- release
 
