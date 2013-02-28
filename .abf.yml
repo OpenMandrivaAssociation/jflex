@@ -1,3 +1,6 @@
+removed_sources:
+  jflex-1.4.1.tar.bz2: 302e71c9a9dff5ee8c9380692bea462a0828df68
 sources:
-  "jflex-1.4.1-generated-files.tar.bz2": e4f56659e6c74af1e02e7213e3a291a43555f370
-  "jflex-1.4.1.tar.bz2": 302e71c9a9dff5ee8c9380692bea462a0828df68
+  jflex-1.4.1-generated-files.tar.bz2: e4f56659e6c74af1e02e7213e3a291a43555f370
+  jflex-1.4.3-generated-files.tar.bz2: 8a7fa6f6a40d1efc9fbdd5674871857d084fa98c
+  jflex-1.4.3.tar.gz: d90c618d6b5dc9650f38843605834f18d0a76a4c

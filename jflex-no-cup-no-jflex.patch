@@ -1,6 +1,6 @@
---- jflex-1.4.1/src/build.xml.orig	2006-09-09 07:56:40.000000000 +0200
-+++ jflex-1.4.1/src/build.xml	2006-09-09 08:13:13.000000000 +0200
-@@ -25,7 +25,6 @@
+--- jflex-1.4.3/src/build.xml.orig	2013-02-28 03:26:32.296148577 +0100
++++ jflex-1.4.3/src/build.xml	2013-02-28 03:27:19.967552603 +0100
+@@ -28,7 +28,6 @@
    <target name="help" description="show help message">
    	<echo message="Ant build file for JFlex. Useful targets:"/> 
    	<echo message=""/> 
@@ -8,20 +8,23 @@
    	<echo message="realclean:  remove all compiled and generated files"/>
    	<echo message="jar:        make JFlex.jar"/> 
    	<echo message=""/> 
-@@ -38,12 +37,6 @@
-     <taskdef classname="java_cup.AntTask" name="cup" classpath="${cup.jar}"/>
+@@ -41,15 +40,7 @@
+     <taskdef classname="java_cup.anttask.CUPTask" name="cup" classpath="${cup.jar}"/>
    </target>
  
 -  <target name="gettools" description="download development tools">
 -    <mkdir dir="${tools.dir}"/>
 -    <get src="${jflex.jar.url}" dest="${jflex.jar}"/>
 -    <get src="${cup.jar.url}" dest="${cup.jar}"/>
+-    <get src="${junit.jar.url}" dest="${junit.jar}"/>
 -  </target>
 -
    <target name="dist" description="build distribution">
+-    <antcall target="gettools" />
      <antcall target="build" />
      <antcall target="libclean" />
-@@ -55,7 +48,7 @@
+   </target>
+@@ -60,7 +51,7 @@
    <target name="cbuild" depends="libclean,compile,jar" 
            description="recompile and pack all classes"/> 
  
@@ -30,7 +33,7 @@
            description="compile all classes">
      <javac srcdir="." 
             destdir="../lib" 
-@@ -63,14 +56,6 @@
+@@ -69,14 +60,6 @@
             debug="on" />
    </target>
  
@@ -39,7 +42,7 @@
 -  </target>
 -
 -  <target name="cup" depends="declare" description="generate parser">
--    <cup file="JFlex/LexParse.cup" dir="JFlex" interface="true" parser="LexParse" />
+-    <cup srcfile="JFlex/LexParse.cup" interface="true" parser="LexParse" />
 -  </target>
 -
    <target name="copy" description="copy resources to build dir">
