@@ -3,7 +3,7 @@
 Summary:	A Lexical Analyzer Generator for Java
 Name:		jflex
 Version:	1.4.3
-Release:	2
+Release:	3
 License:	GPLv2
 Group:		Development/Java
 Url:		http://www.jflex.de/
