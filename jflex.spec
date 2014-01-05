@@ -1,4 +1,8 @@
 %{?_javapackages_macros:%_javapackages_macros}
+%if 0%{?fedora}
+%else
+%global _emacs_bytecompile /usr/bin/emacs --batch --no-init-file --no-site-file --eval '(progn (setq load-path (cons "." load-path)))' -f batch-byte-compile
+%endif
 %bcond_with bootstrap
 
 Summary:        Fast Scanner Generator
@@ -29,7 +33,11 @@ BuildRequires:  junit
 BuildRequires:  java-devel
 BuildRequires:  java_cup
 BuildRequires:  desktop-file-utils
+%if 0%{?fedora}
 Requires:       emacs-filesystem >= %{_emacs_version}
+%else
+Requires:       emacs
+%endif
 Requires:       java
 Requires:       java_cup
 BuildArch:      noarch
