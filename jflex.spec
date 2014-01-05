@@ -53,8 +53,8 @@ This package provides %{summary}.
 
 %prep
 %setup -q
-%patch0 -b .sav
-%patch1 -p1 -b .sav
+%patch0
+%patch1 -p1
 
 %{__sed} -i 's/\r//' COPYRIGHT
 %{__sed} -i 's|includes="JFlex/\*\*,java_cup/\*\*,skeleton|includes="JFlex/\*\*,skeleton|g' src/build.xml
