@@ -4,7 +4,7 @@ Summary:        Fast Scanner Generator
 Group:          Development/Java
 Name:           jflex
 Version:        1.6.0
-Release:        1.2
+Release:        1.3
 License:        BSD
 URL:            http://jflex.de/
 BuildArch:      noarch
