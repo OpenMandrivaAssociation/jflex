@@ -6,7 +6,7 @@ Name:           jflex
 Version:        1.6.0
 Release:        1.5
 License:        BSD
-URL:            http://jflex.de/
+URL:            https://jflex.de/
 BuildArch:      noarch
 
 # ./create-tarball.sh %%{version}
